@@ -68,6 +68,22 @@ function funcs.listInventories()
   return ret
 end
 
+function funcs.listInventory(inventory)
+  checkUtil()
+  local sz = peripheral.call(inventory, "size")
+  local items = peripheral.call(inventory, "list")
+  local inv = {n = 0}
+  for i = 1, sz do
+    if items[i] then
+      local temp = utils.dCopy(items[i])
+      temp.slot = i
+      inv.n = inv.n + 1
+      inv[inv.n] = temp
+    end
+  end
+  return inv
+end
+
 -- Returns a table of tables, where the key for each table is the inventory name
 -- and the value is the inventory's contents.
 function funcs.listItemsByInventory()
@@ -77,15 +93,7 @@ function funcs.listItemsByInventory()
   local invs = {}
 
   for i = 1, invNames.n do
-    local cInv = invNames[i]
-    local sz = peripheral.call(cInv, "size")
-    local items = peripheral.call(cInv, "list")
-    invs[cInv] = {}
-    for j = 1, sz do
-      if items[j] then
-        invs[cInv][j] = utils.dCopy(items[j])
-      end
-    end
+    invs[i] = funcs.listInventory(invNames[i])
   end
   return invs
 end
