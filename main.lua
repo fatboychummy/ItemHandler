@@ -110,7 +110,7 @@ function funcs.listItemsByInventory()
   local invs = {}
 
   for i = 1, invNames.n do
-    invs[i] = funcs.listInventory(invNames[i])
+    invs[invNames[i]] = funcs.listInventory(invNames[i])
   end
   return invs
 end
