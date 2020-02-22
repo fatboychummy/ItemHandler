@@ -1,7 +1,24 @@
 local funcs = {}
 local erString = "Bad argument #%d: %s"
 local tpString = "Bad argumend #%d: Expected %s, got %s."
-local ok, utils = pcall(require, "utils")
+local ok, utils = pcall(require, "modules.utils")
+local sides = rs.getSides()
+local modemSide, myName
+
+local flg = false
+for i = 1, #sides do
+  if peripheral.getType(sides[i]) == "modem" then
+    modemSide = sides[i]
+    myName = peripheral.call(modemSide, "getNameLocal")
+    if flg then
+      error("Too many wired modem connected directly to me! Maximum 1!")
+    end
+  end
+end
+if not modemSide then
+  error("No wired modem connected!")
+end
+
 
 -- Things that are recognized as inventories...
 -- Add or remove things as needed.
@@ -198,6 +215,41 @@ function funcs.getSlots()
   end
 
   return used, total
+end
+
+function funcs.pullToSelf(item, count)
+  local pulled = 0
+  local invNames = funcs.listInventories()
+  for i = 1, invNames.n do
+    pulled = pulled + funcs.pullToSelfFrom(invNames[i], item, count - pulled)
+    if pulled == count then
+      return pulled
+    end
+  end
+  return pulled
+end
+
+function funcs.pullToSelfFrom(inventory, item, count)
+  local pulled = 0
+
+  local items = funcs.listInventory(inventory)
+
+  for i = 1, items.n do
+    local cItem = items[i]
+    if cItem.name == item.name and cItem.damage == item.damage then
+      pulled = pulled + funcs.pullToSelfFromSlot(inventory, cItem.slot,
+                                                 count - pulled)
+      --
+      if pulled == count then
+        return pulled
+      end
+    end
+  end
+  return pulled
+end
+
+function funcs.pullToSelfFromSlot(inventory, slot, count)
+  return peripheral.call(inventory, "pushItems", myName, slot, count)
 end
 
 return funcs
